@@ -2,6 +2,12 @@
 name = "fnlint"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ethan Goh <7086cmd@gmail.com>"]
+description = "A filename linter."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/7086cmd/fnlint"
+keywords = ["linter", "filename", "ls-lint"]
+categories = ["development-tools"]
 
 [dependencies]
 serde = { version = "1.0.208", features = ["derive"] }
