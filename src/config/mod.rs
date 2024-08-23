@@ -6,28 +6,28 @@ use std::path::Path;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Copy, Clone)]
 pub enum FilenameCase {
-  LowerCase,
-  SnakeCase,
-  CamelCase,
-  KebabCase,
-  PascalCase,
-  PointCase,
-  ScreamingSnakeCase,
+  Lower,
+  Snake,
+  Camel,
+  Kebab,
+  Pascal,
+  Point,
+  ScreamingSnake,
 }
 
 impl FromStr for FilenameCase {
   type Err = String;
   fn from_str(s: &str) -> anyhow::Result<Self, Self::Err> {
     match s {
-      "lowercase" => Ok(FilenameCase::LowerCase),
-      "snake_case" => Ok(FilenameCase::SnakeCase),
-      "camelCase" => Ok(FilenameCase::CamelCase),
-      "kebab-case" => Ok(FilenameCase::KebabCase),
-      "PascalCase" => Ok(FilenameCase::PascalCase),
-      "point.case" => Ok(FilenameCase::PointCase),
-      "SCREAMING_SNAKE_CASE" => Ok(FilenameCase::ScreamingSnakeCase),
+      "lowercase" => Ok(FilenameCase::Lower),
+      "snake_case" => Ok(FilenameCase::Snake),
+      "camelCase" => Ok(FilenameCase::Camel),
+      "kebab-case" => Ok(FilenameCase::Kebab),
+      "Pascal" => Ok(FilenameCase::Pascal),
+      "point.case" => Ok(FilenameCase::Point),
+      "SCREAMING_SNAKE_CASE" => Ok(FilenameCase::ScreamingSnake),
       _ => Err(format!("Unknown filename case: {}", s)),
     }
   }
@@ -36,13 +36,13 @@ impl FromStr for FilenameCase {
 impl Display for FilenameCase {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      FilenameCase::LowerCase => write!(f, "lowercase"),
-      FilenameCase::SnakeCase => write!(f, "snake_case"),
-      FilenameCase::CamelCase => write!(f, "camelCase"),
-      FilenameCase::KebabCase => write!(f, "kebab-case"),
-      FilenameCase::PascalCase => write!(f, "PascalCase"),
-      FilenameCase::PointCase => write!(f, "point.case"),
-      FilenameCase::ScreamingSnakeCase => write!(f, "SCREAMING_SNAKE_CASE"),
+      FilenameCase::Lower => write!(f, "lowercase"),
+      FilenameCase::Snake => write!(f, "snake_case"),
+      FilenameCase::Camel => write!(f, "camelCase"),
+      FilenameCase::Kebab => write!(f, "kebab-case"),
+      FilenameCase::Pascal => write!(f, "Pascal"),
+      FilenameCase::Point => write!(f, "point.case"),
+      FilenameCase::ScreamingSnake => write!(f, "SCREAMING_SNAKE_CASE"),
     }
   }
 }
@@ -75,22 +75,22 @@ impl FilenameCase {
       return true;
     }
     match self {
-      FilenameCase::LowerCase
-      | FilenameCase::PointCase
-      | FilenameCase::SnakeCase
-      | FilenameCase::KebabCase
-      | FilenameCase::CamelCase
+      FilenameCase::Lower
+      | FilenameCase::Point
+      | FilenameCase::Snake
+      | FilenameCase::Kebab
+      | FilenameCase::Camel
         if PATTERNS.none_split.is_match(filename) =>
       {
         true
       }
-      FilenameCase::SnakeCase => PATTERNS.snake_case.is_match(filename),
-      FilenameCase::CamelCase => PATTERNS.camel_case.is_match(filename),
-      FilenameCase::KebabCase => PATTERNS.kebab_case.is_match(filename),
-      FilenameCase::PascalCase => PATTERNS.pascal_case.is_match(filename),
-      FilenameCase::LowerCase => PATTERNS.lower_case.is_match(filename),
-      FilenameCase::PointCase => PATTERNS.point_case.is_match(filename),
-      FilenameCase::ScreamingSnakeCase => PATTERNS.screaming_snake_case.is_match(filename),
+      FilenameCase::Snake => PATTERNS.snake_case.is_match(filename),
+      FilenameCase::Camel => PATTERNS.camel_case.is_match(filename),
+      FilenameCase::Kebab => PATTERNS.kebab_case.is_match(filename),
+      FilenameCase::Pascal => PATTERNS.pascal_case.is_match(filename),
+      FilenameCase::Lower => PATTERNS.lower_case.is_match(filename),
+      FilenameCase::Point => PATTERNS.point_case.is_match(filename),
+      FilenameCase::ScreamingSnake => PATTERNS.screaming_snake_case.is_match(filename),
     }
   }
 }
