@@ -1,0 +1,40 @@
+# port from rolldown/.github/workflows/auth-labeling.yml
+name: 'Automate labeling'
+on:
+  # https://github.com/actions/labeler?tab=readme-ov-file#permissions
+  pull_request_target:
+    types: [opened, assigned]
+
+jobs:
+  # Labele the PR based on the configuration in `.github/labeler.yml` using https://github.com/actions/labeler
+  labeler:
+    if: github.event.action == 'opened'
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v5
+
+  remove-needs-triage-when-assigned:
+    if: github.event.action == 'assigned'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'remove-labels'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          labels: 'needs-triage'
+
+  approval-if-self-assigned:
+    # Requirements:
+    # - The PR is created by the actor
+    # - The PR is assigned to the actor
+    # - The operation is done by the actor
+    if: github.event.action == 'assigned' && github.event.assignee.login == github.actor && github.event.pull_request.user.login == github.actor
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: hmarr/auto-approve-action@v4
