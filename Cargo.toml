@@ -13,3 +13,4 @@ clap = { version = "4", features = ["derive"] }
 walkdir = "2.5.0"
 anyhow = "1.0.86"
 glob = "0.3.1"
+arcstr = "1.2.0"

@@ -1,6 +1,7 @@
 use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -32,6 +33,20 @@ impl FromStr for FilenameCase {
   }
 }
 
+impl Display for FilenameCase {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      FilenameCase::LowerCase => write!(f, "lowercase"),
+      FilenameCase::SnakeCase => write!(f, "snake_case"),
+      FilenameCase::CamelCase => write!(f, "camelCase"),
+      FilenameCase::KebabCase => write!(f, "kebab-case"),
+      FilenameCase::PascalCase => write!(f, "PascalCase"),
+      FilenameCase::PointCase => write!(f, "point.case"),
+      FilenameCase::ScreamingSnakeCase => write!(f, "SCREAMING_SNAKE_CASE"),
+    }
+  }
+}
+
 struct FilenamePatterns {
   snake_case: LazyLock<Regex>,
   camel_case: LazyLock<Regex>,
@@ -40,6 +55,7 @@ struct FilenamePatterns {
   lower_case: LazyLock<Regex>,
   point_case: LazyLock<Regex>,
   screaming_snake_case: LazyLock<Regex>,
+  none_split: LazyLock<Regex>, // No any `.`, `_`, capital letter
 }
 
 static PATTERNS: FilenamePatterns = FilenamePatterns {
@@ -50,11 +66,24 @@ static PATTERNS: FilenamePatterns = FilenamePatterns {
   lower_case: LazyLock::new(|| Regex::new(r"^[a-z0-9]+$").unwrap()),
   point_case: LazyLock::new(|| Regex::new(r"^[a-z0-9]+(\.[a-z0-9]+)*$").unwrap()),
   screaming_snake_case: LazyLock::new(|| Regex::new(r"^[A-Z0-9_]+$").unwrap()),
+  none_split: LazyLock::new(|| Regex::new(r"^[a-z0-9]+$").unwrap()),
 };
 
 impl FilenameCase {
   pub(crate) fn matches(&self, filename: &str) -> bool {
+    if PATTERNS.none_split.is_match(filename) {
+      return true;
+    }
     match self {
+      FilenameCase::LowerCase
+      | FilenameCase::PointCase
+      | FilenameCase::SnakeCase
+      | FilenameCase::KebabCase
+      | FilenameCase::CamelCase
+        if PATTERNS.none_split.is_match(filename) =>
+      {
+        true
+      }
       FilenameCase::SnakeCase => PATTERNS.snake_case.is_match(filename),
       FilenameCase::CamelCase => PATTERNS.camel_case.is_match(filename),
       FilenameCase::KebabCase => PATTERNS.kebab_case.is_match(filename),
