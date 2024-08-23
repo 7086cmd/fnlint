@@ -41,6 +41,7 @@ pub fn scan_dir(base: &str, ignore: &Vec<String>) -> Vec<String> {
   walker
     .filter_map(Result::ok)
     .filter(|entry| !is_ignored(entry, ignore))
+    .filter(|entry| entry.path().is_file())
     .map(|entry| entry.path().to_str().unwrap().to_string())
     .collect()
 }

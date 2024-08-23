@@ -11,7 +11,7 @@ pub struct Issue {
 
 impl Display for Issue {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "Filename {} does not match any of the patterns: ", self.filename)?;
+    write!(f, "Filename {} in {} does not match any of the patterns: ", self.filename, self.path)?;
     let cases =
       self.target.iter().map(|target| target.to_string()).collect::<Vec<String>>().join(", ");
     write!(f, "{}", cases)?;
@@ -51,7 +51,7 @@ mod tests {
       path: "src/linter/helloWorld.js".to_string(),
     };
     let expected =
-      "Filename hello-world.js does not match any of the patterns: kebab-case, lowercase";
+      "Filename hello-world.js in src/linter/helloWorld.js does not match any of the patterns: kebab-case, lowercase";
     assert_eq!(issue.to_string(), expected);
   }
 

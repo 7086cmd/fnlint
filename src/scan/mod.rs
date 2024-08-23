@@ -1,2 +1,2 @@
 pub mod pattern;
-mod scanner;
+pub mod scanner;
