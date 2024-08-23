@@ -1,12 +1,15 @@
+use anyhow::Result;
 use regex::Regex;
-use serde::Deserialize;
+use serde::de::Visitor;
+use serde::{de, Deserialize, Deserializer};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
-#[derive(Debug, Deserialize, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Deserialize)]
 pub enum FilenameCase {
   Lower,
   Snake,
@@ -97,21 +100,56 @@ impl FilenameCase {
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct FilenameLintConfig {
+  #[serde(deserialize_with = "deserialize_map")]
   pub ls: HashMap<String, Vec<FilenameCase>>,
   pub ignore: Vec<String>,
 }
 
-impl FilenameCase {
-  pub fn load_file() -> Self {
-    let json_path = Path::new("./ls-lint.json");
+fn deserialize_map<'de, D>(deserializer: D) -> Result<HashMap<String, Vec<FilenameCase>>, D::Error>
+where
+  D: Deserializer<'de>,
+{
+  struct MapVisitor;
+
+  impl<'de> Visitor<'de> for MapVisitor {
+    type Value = HashMap<String, Vec<FilenameCase>>;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+      formatter.write_str("a map of strings to lists of filename cases")
+    }
+
+    fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+    where
+      M: de::MapAccess<'de>,
+    {
+      let mut map = HashMap::new();
+
+      while let Some((key, value)) = access.next_entry::<String, Vec<String>>()? {
+        let cases: Vec<FilenameCase> = value
+          .into_iter()
+          .map(|s| FilenameCase::from_str(&s).map_err(de::Error::custom))
+          .collect::<Result<_, _>>()?;
+        map.insert(key, cases);
+      }
+
+      Ok(map)
+    }
+  }
+
+  deserializer.deserialize_map(MapVisitor)
+}
+
+impl FilenameLintConfig {
+  pub fn load_file() -> Result<Self> {
+    let json_path = Path::new("./fnlint.config.json");
     if json_path.exists() {
       Self::load_json(json_path.to_str().unwrap().to_string())
     } else {
-      let yaml_path = Path::new("./ls-lint.yaml");
+      let yaml_path = Path::new("./fnlint.config.yaml");
       if yaml_path.exists() {
         Self::load_yaml(yaml_path.to_str().unwrap().to_string())
       } else {
-        let toml_path = Path::new("./ls-lint.toml");
+        let toml_path = Path::new("./fnlint.config.toml");
         if toml_path.exists() {
           Self::load_toml(toml_path.to_str().unwrap().to_string())
         } else {
@@ -121,21 +159,22 @@ impl FilenameCase {
     }
   }
 
-  fn load_json(path: String) -> Self {
-    let config = std::fs::read_to_string(path).expect("Failed to read file");
-    let config: Self = serde_json::from_str(&config).expect("Failed to parse JSON");
-    config
+  fn load_json(path: String) -> Result<Self> {
+    let config = std::fs::read_to_string(path)?;
+    let config: Value = serde_json::from_str(&config)?;
+    let config: Self = serde_json::from_value(config)?;
+    Ok(config)
   }
 
-  fn load_yaml(path: String) -> Self {
-    let config = std::fs::read_to_string(path).expect("Failed to read file");
-    let config: Self = serde_yml::from_str(&config).expect("Failed to parse YAML");
-    config
+  fn load_yaml(path: String) -> Result<Self> {
+    let config = std::fs::read_to_string(path)?;
+    let config: Self = serde_yml::from_str(&config)?;
+    Ok(config)
   }
 
-  fn load_toml(path: String) -> Self {
-    let config = std::fs::read_to_string(path).expect("Failed to read file");
-    let config: Self = toml::from_str(&config).expect("Failed to parse TOML");
-    config
+  fn load_toml(path: String) -> Result<Self> {
+    let config = std::fs::read_to_string(path)?;
+    let config: Self = toml::from_str(&config)?;
+    Ok(config)
   }
 }

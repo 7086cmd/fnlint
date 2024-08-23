@@ -1,0 +1,8 @@
+{
+  "ls": {
+    ".rs": ["snake_case"]
+  },
+  "ignore": [
+    "target"
+  ]
+}
