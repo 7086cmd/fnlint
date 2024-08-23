@@ -1,6 +1,5 @@
 use crate::config::FilenameCase;
 use std::fmt::Display;
-use std::str::FromStr;
 use std::sync::Arc;
 pub mod visitor;
 
@@ -23,7 +22,7 @@ impl Display for Issue {
 pub fn lint_files(
   files: Vec<String>,
   ext: String,
-  patterns: Arc<Vec<FilenameCase>>,
+  patterns: &Arc<Vec<FilenameCase>>,
 ) -> Vec<Issue> {
   files.iter().filter_map(|path| lint_name(path, &patterns, &ext)).collect::<Vec<Issue>>()
 }
@@ -48,7 +47,7 @@ mod tests {
   fn test_issue_print() {
     let issue = Issue {
       filename: "hello-world.js".to_string(),
-      target: Arc::new(vec![FilenameCase::KebabCase, FilenameCase::LowerCase]),
+      target: Arc::new(vec![FilenameCase::Kebab, FilenameCase::Lower]),
       path: "src/linter/helloWorld.js".to_string(),
     };
     let expected =
@@ -58,14 +57,14 @@ mod tests {
 
   #[test]
   fn lint_none_case() {
-    let patterns = Arc::new(vec![FilenameCase::KebabCase, FilenameCase::LowerCase]);
+    let patterns = Arc::new(vec![FilenameCase::Kebab, FilenameCase::Lower]);
     let no_issue = lint_name("src/linter/mod.rs", &patterns, ".rs").is_none();
     assert!(no_issue);
   }
 
   #[test]
   fn lint_kebab_case() {
-    let patterns = Arc::new(vec![FilenameCase::KebabCase]);
+    let patterns = Arc::new(vec![FilenameCase::Kebab]);
     let no_issue = lint_name("src/linter/hello-world.js", &patterns, ".js");
     assert!(no_issue.is_none());
     let camel = lint_name("src/linter/helloWorld.js", &patterns, ".js");
@@ -78,7 +77,7 @@ mod tests {
 
   #[test]
   fn lint_camel_case() {
-    let patterns = Arc::new(vec![FilenameCase::CamelCase]);
+    let patterns = Arc::new(vec![FilenameCase::Camel]);
     let always_good = lint_name("src/linter/mod.js", &patterns, ".js").is_none();
     assert!(always_good);
     let no_issue = lint_name("src/linter/helloWorld.js", &patterns, ".js").is_none();
@@ -93,7 +92,7 @@ mod tests {
 
   #[test]
   fn lint_pascal_case() {
-    let patterns = Arc::new(vec![FilenameCase::PascalCase]);
+    let patterns = Arc::new(vec![FilenameCase::Pascal]);
     let no_issue = lint_name("src/linter/HelloWorld.js", &patterns, ".js").is_none();
     assert!(no_issue);
     let kebab = lint_name("src/linter/hello-world.js", &patterns, ".js");
@@ -106,7 +105,7 @@ mod tests {
 
   #[test]
   fn lint_snake_case() {
-    let patterns = Arc::new(vec![FilenameCase::SnakeCase]);
+    let patterns = Arc::new(vec![FilenameCase::Snake]);
     let no_issue = lint_name("src/linter/hello_world.js", &patterns, ".js").is_none();
     assert!(no_issue);
     let kebab = lint_name("src/linter/hello-world.js", &patterns, ".js");
@@ -119,7 +118,7 @@ mod tests {
 
   #[test]
   fn lint_snake_files() {
-    let patterns = Arc::new(vec![FilenameCase::SnakeCase]);
+    let patterns = Arc::new(vec![FilenameCase::Snake]);
     let files = vec![
       "src/linter/hello_world.js".to_string(),
       "src/linter/a_bC.js".to_string(),
@@ -128,7 +127,7 @@ mod tests {
       "src/linter/HelloWorld.js".to_string(),
       "src/linter/hello-world.js".to_string(),
     ];
-    let issues = lint_files(files, ".js".to_string(), patterns);
+    let issues = lint_files(files, ".js".to_string(), &patterns);
     assert_eq!(issues.len(), 5);
   }
 }
